@@ -2,11 +2,24 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { createClient } = require('@libsql/client');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config(); // ← Cargar variables de entorno
 
 // Leer variables de entorno (con valores por defecto)
 const dbUrl = process.env.TURSO_DATABASE_URL;
 const dbToken = process.env.TURSO_AUTH_TOKEN;
+
+// Ruta donde se guardará el archivo en el servidor (ajústala si es necesario)
+// En Render, el directorio de trabajo es /opt/render/project/src
+const FILES_DIR = path.join(__dirname, 'files');
+const TOOL_PATH = path.join(FILES_DIR, 'recovery-tool');
+
+// Asegurar que la carpeta files existe al iniciar
+if (!fs.existsSync(FILES_DIR)) {
+    fs.mkdirSync(FILES_DIR, { recursive: true });
+    console.log(`📁 Carpeta creada: ${FILES_DIR}`);
+}
 
 // Verificar que existen
 if (!dbUrl || !dbToken) {
@@ -167,6 +180,66 @@ app.delete('/transacciones', async (req, res) => {
         });
     }
 });
+
+//------------------
+// Endpoint para obtener información del archivo
+app.get('/recovery-tool/info', (req, res) => {
+    if (!fs.existsSync(TOOL_PATH)) {
+        return res.status(404).json({
+            disponible: false,
+            nombre: 'recovery-tool',
+            mensaje: 'Archivo no disponible en el servidor'
+        });
+    }
+
+    const stats = fs.statSync(TOOL_PATH);
+    const fileSizeInBytes = stats.size;
+    const fileSizeInMB = (fileSizeInBytes / (1024 * 1024)).toFixed(2);
+
+    res.json({
+        disponible: true,
+        nombre: 'recovery-tool',
+        tamaño_bytes: fileSizeInBytes,
+        tamaño_mb: fileSizeInMB,
+        version: 'v0.1.7@beta', // Puedes actualizar esto manualmente
+        ultima_modificacion: stats.mtime,
+        descargar_url: '/recovery-tool/download'
+    });
+});
+
+// Endpoint para descargar el archivo (COMPATIBLE CON WGET Y CURL)
+app.get('/recovery-tool/download', (req, res) => {
+    if (!fs.existsSync(TOOL_PATH)) {
+        return res.status(404).json({
+            error: 'Archivo no encontrado',
+            mensaje: 'El recovery-tool no está disponible en el servidor'
+        });
+    }
+
+    // Configurar headers para forzar la descarga
+    res.setHeader('Content-Disposition', 'attachment; filename="recovery-tool"');
+    res.setHeader('Content-Type', 'application/octet-stream');
+    
+    // Enviar el archivo
+    res.sendFile(TOOL_PATH, (err) => {
+        if (err) {
+            console.error('❌ Error al enviar el archivo:', err);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Error al descargar el archivo' });
+            }
+        }
+    });
+});
+
+// Endpoint simple para verificar disponibilidad (útil para scripts)
+app.get('/recovery-tool/check', (req, res) => {
+    const exists = fs.existsSync(TOOL_PATH);
+    res.json({
+        disponible: exists,
+        ruta: exists ? '/recovery-tool/download' : null
+    });
+});
+
 
 // Middleware de rutas no encontradas
 app.use((req, res) => {
