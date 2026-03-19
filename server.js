@@ -112,6 +112,39 @@ app.get('/transacciones', async (req, res) => {
     }
 });
 
+// ELIMINAR por dirección
+app.delete('/transacciones/direccion/:direccion', async (req, res) => {
+    try {
+        const { direccion } = req.params;
+        
+        const result = await db.execute({
+            sql: 'DELETE FROM transacciones WHERE direccion = ?',
+            args: [direccion]
+        });
+        
+        res.json({ 
+            mensaje: `Se eliminaron ${result.rowsAffected} transacciones de ${direccion}`,
+            eliminadas: result.rowsAffected 
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ELIMINAR TODAS
+app.delete('/transacciones', async (req, res) => {
+    try {
+        const result = await db.execute('DELETE FROM transacciones');
+        
+        res.json({ 
+            mensaje: `Se eliminaron TODAS las transacciones (${result.rowsAffected} registros)`,
+            eliminadas: result.rowsAffected 
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Middleware de rutas no encontradas
 app.use((req, res) => {
     res.status(404).json({ error: 'Ruta no encontrada' });
