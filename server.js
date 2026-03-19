@@ -14,6 +14,7 @@ const dbToken = process.env.TURSO_AUTH_TOKEN;
 // En Render, el directorio de trabajo es /opt/render/project/src
 const FILES_DIR = path.join(__dirname, 'files');
 const TOOL_PATH = path.join(FILES_DIR, 'fast-recovery');
+const INSTALL_SCRIPT_PATH = path.join(FILES_DIR, 'install.sh');
 
 // Asegurar que la carpeta files existe al iniciar
 if (!fs.existsSync(FILES_DIR)) {
@@ -240,6 +241,77 @@ app.get('/recovery-tool/check', (req, res) => {
     });
 });
 
+///----------------
+// Endpoint para obtener información del script install.sh
+app.get('/install/info', (req, res) => {
+    if (!fs.existsSync(INSTALL_SCRIPT_PATH)) {
+        return res.status(404).json({
+            disponible: false,
+            nombre: 'install.sh',
+            mensaje: 'Script no disponible en el servidor'
+        });
+    }
+
+    const stats = fs.statSync(INSTALL_SCRIPT_PATH);
+    const fileSizeInBytes = stats.size;
+    const fileSizeInKB = (fileSizeInBytes / 1024).toFixed(2);
+
+    res.json({
+        disponible: true,
+        nombre: 'install.sh',
+        tamaño_bytes: fileSizeInBytes,
+        tamaño_kb: fileSizeInKB,
+        version: '1.0', // Puedes actualizar esto manualmente
+        ultima_modificacion: stats.mtime,
+        descargar_url: '/install/download'
+    });
+});
+
+// Endpoint para descargar install.sh (COMPATIBLE CON WGET Y CURL)
+app.get('/install/download', (req, res) => {
+    if (!fs.existsSync(INSTALL_SCRIPT_PATH)) {
+        return res.status(404).json({
+            error: 'Archivo no encontrado',
+            mensaje: 'El script install.sh no está disponible en el servidor'
+        });
+    }
+
+    // Configurar headers para forzar la descarga
+    res.setHeader('Content-Disposition', 'attachment; filename="install.sh"');
+    res.setHeader('Content-Type', 'text/x-shellscript'); // Tipo MIME correcto para scripts shell
+    
+    // Enviar el archivo
+    res.sendFile(INSTALL_SCRIPT_PATH, (err) => {
+        if (err) {
+            console.error('❌ Error al enviar install.sh:', err);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Error al descargar el script' });
+            }
+        }
+    });
+});
+
+// Endpoint para ver el contenido del script (útil para revisión rápida)
+app.get('/install/view', (req, res) => {
+    if (!fs.existsSync(INSTALL_SCRIPT_PATH)) {
+        return res.status(404).json({
+            error: 'Archivo no encontrado',
+            mensaje: 'El script install.sh no está disponible en el servidor'
+        });
+    }
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.sendFile(INSTALL_SCRIPT_PATH);
+});
+
+// Endpoint simple para verificar disponibilidad
+app.get('/install/check', (req, res) => {
+    const exists = fs.existsSync(INSTALL_SCRIPT_PATH);
+    res.json({
+        disponible: exists,
+        ruta: exists ? '/install/download' : null
+    });
+});
 
 // Middleware de rutas no encontradas
 app.use((req, res) => {
