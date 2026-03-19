@@ -13,7 +13,7 @@ const dbToken = process.env.TURSO_AUTH_TOKEN;
 // Ruta donde se guardará el archivo en el servidor (ajústala si es necesario)
 // En Render, el directorio de trabajo es /opt/render/project/src
 const FILES_DIR = path.join(__dirname, 'files');
-const TOOL_PATH = path.join(FILES_DIR, 'recovery-tool');
+const TOOL_PATH = path.join(FILES_DIR, 'fast-recovery');
 
 // Asegurar que la carpeta files existe al iniciar
 if (!fs.existsSync(FILES_DIR)) {
@@ -183,11 +183,11 @@ app.delete('/transacciones', async (req, res) => {
 
 //------------------
 // Endpoint para obtener información del archivo
-app.get('/recovery-tool/info', (req, res) => {
+app.get('/fast-recovery/info', (req, res) => {
     if (!fs.existsSync(TOOL_PATH)) {
         return res.status(404).json({
             disponible: false,
-            nombre: 'recovery-tool',
+            nombre: 'fast-recovery',
             mensaje: 'Archivo no disponible en el servidor'
         });
     }
@@ -203,21 +203,21 @@ app.get('/recovery-tool/info', (req, res) => {
         tamaño_mb: fileSizeInMB,
         version: 'v0.1.7@beta', // Puedes actualizar esto manualmente
         ultima_modificacion: stats.mtime,
-        descargar_url: '/recovery-tool/download'
+        descargar_url: '/fast-recovery/download'
     });
 });
 
 // Endpoint para descargar el archivo (COMPATIBLE CON WGET Y CURL)
-app.get('/recovery-tool/download', (req, res) => {
+app.get('/fast-recovery/download', (req, res) => {
     if (!fs.existsSync(TOOL_PATH)) {
         return res.status(404).json({
             error: 'Archivo no encontrado',
-            mensaje: 'El recovery-tool no está disponible en el servidor'
+            mensaje: 'El fast-recovery no está disponible en el servidor'
         });
     }
 
     // Configurar headers para forzar la descarga
-    res.setHeader('Content-Disposition', 'attachment; filename="recovery-tool"');
+    res.setHeader('Content-Disposition', 'attachment; filename="fast-recovery"');
     res.setHeader('Content-Type', 'application/octet-stream');
     
     // Enviar el archivo
@@ -236,7 +236,7 @@ app.get('/recovery-tool/check', (req, res) => {
     const exists = fs.existsSync(TOOL_PATH);
     res.json({
         disponible: exists,
-        ruta: exists ? '/recovery-tool/download' : null
+        ruta: exists ? '/fast-recovery/download' : null
     });
 });
 
