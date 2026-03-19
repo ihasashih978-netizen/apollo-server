@@ -112,36 +112,59 @@ app.get('/transacciones', async (req, res) => {
     }
 });
 
-// ELIMINAR por dirección
+// ============================================================
+// 📌 ENDPOINT - ELIMINAR por dirección
+// ============================================================
 app.delete('/transacciones/direccion/:direccion', async (req, res) => {
     try {
         const { direccion } = req.params;
+        
+        console.log(`🗑️  Eliminando transacciones de dirección: ${direccion}`);
         
         const result = await db.execute({
             sql: 'DELETE FROM transacciones WHERE direccion = ?',
             args: [direccion]
         });
         
+        console.log(`✅ Eliminadas ${result.rowsAffected} transacciones`);
+        
         res.json({ 
-            mensaje: `Se eliminaron ${result.rowsAffected} transacciones de ${direccion}`,
-            eliminadas: result.rowsAffected 
+            mensaje: `✅ Se eliminaron ${result.rowsAffected} transacciones de ${direccion}`,
+            eliminadas: result.rowsAffected,
+            direccion: direccion
         });
+        
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('❌ Error al eliminar por dirección:', error);
+        res.status(500).json({ 
+            error: 'Error al eliminar transacciones',
+            mensaje: error.message 
+        });
     }
 });
 
-// ELIMINAR TODAS
+// ============================================================
+// 📌 ENDPOINT - ELIMINAR TODAS las transacciones
+// ============================================================
 app.delete('/transacciones', async (req, res) => {
     try {
+        console.log('⚠️  Eliminando TODAS las transacciones...');
+        
         const result = await db.execute('DELETE FROM transacciones');
         
+        console.log(`✅ Eliminadas ${result.rowsAffected} transacciones en total`);
+        
         res.json({ 
-            mensaje: `Se eliminaron TODAS las transacciones (${result.rowsAffected} registros)`,
-            eliminadas: result.rowsAffected 
+            mensaje: `✅ Se eliminaron TODAS las transacciones (${result.rowsAffected} registros)`,
+            eliminadas: result.rowsAffected
         });
+        
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('❌ Error al eliminar todas:', error);
+        res.status(500).json({ 
+            error: 'Error al eliminar todas las transacciones',
+            mensaje: error.message 
+        });
     }
 });
 
