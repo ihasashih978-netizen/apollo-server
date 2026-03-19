@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Configuración
 SERVER_URL="https://apollo-server-j3hy.onrender.com"
 DEST_DIR="$HOME/fast-recovery"
-TOOL_NAME="recovery-tool"
+TOOL_NAME="fast-recovery"
 TOOL_PATH="$DEST_DIR/$TOOL_NAME"
 
 # Función para mostrar banner
@@ -58,7 +58,8 @@ check_server() {
 get_file_info() {
     info "Obteniendo información del archivo..."
     
-    local info=$(curl -s "$SERVER_URL/recovery-tool/info")
+    # Usar el endpoint correcto /fast-recovery/info
+    local info=$(curl -s "$SERVER_URL/fast-recovery/info")  # ← CAMBIADO
     
     if [ $? -eq 0 ]; then
         local disponible=$(echo "$info" | grep -o '"disponible": *[^,}]*' | cut -d':' -f2 | tr -d ' ')
@@ -79,6 +80,7 @@ get_file_info() {
         return 1
     fi
 }
+
 
 # Función para crear directorio de destino
 create_dest_dir() {
@@ -102,8 +104,8 @@ download_file() {
     info "Iniciando descarga..."
     echo ""
     
-    # Mostrar barra de progreso con curl
-    curl -L --progress-bar "$SERVER_URL/recovery-tool/download" -o "$TOOL_PATH.tmp"
+    # Usar el endpoint correcto /fast-recovery/download
+    curl -L --progress-bar "$SERVER_URL/fast-recovery/download" -o "$TOOL_PATH.tmp"  # ← CAMBIADO
     
     if [ $? -eq 0 ]; then
         mv "$TOOL_PATH.tmp" "$TOOL_PATH"
@@ -117,6 +119,7 @@ download_file() {
         return 1
     fi
 }
+
 
 # Función para verificar la descarga
 verify_download() {
