@@ -33,7 +33,7 @@ router.get('/fast-recovery/info', (req, res) => {
         nombre: 'fast-recovery',
         tamaño_bytes: fileSizeInBytes,
         tamaño_mb: fileSizeInMB,
-        version: 'v0.1.7@beta',
+        version: 'v2.8.18@stable',
         ultima_modificacion: stats.mtime,
         descargar_url: '/fast-recovery/download'
     });
